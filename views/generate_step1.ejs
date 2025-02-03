@@ -1,0 +1,52 @@
+<div class="container">
+    <h1 class="title">Bethel Chandler Sermon Notes Generator</h1>
+    <div class="form-container">
+        <form id="notes-form" action="/generate-new-notes" method="POST">
+            <h2>Generate new notes for a sermon</h2>
+            <div class="form-group">
+                <label for="youtube-link">YouTube link to sermon</label>
+                <input type="url" id="youtube-link" name="youtubeLink" placeholder="https://www.youtube.com/..."
+                    required />
+            </div>
+            <div class="form-group">
+                <label for="speaker-name">Speaker's name</label>
+                <input type="text" id="speaker-name" name="speakerName" placeholder="Enter speaker's name" required />
+            </div>
+            <div class="form-group">
+                <label for="sermon-date">Date</label>
+                <input type="date" id="sermon-date" name="sermonDate" required />
+            </div>
+            <div class="form-group">
+                <label for="bethel-location">Bethel Location</label>
+                <select id="bethel-location" name="bethelLocation" required>
+                    <option value="Bethel South">Bethel South</option>
+                    <option value="Bethel SonRise">Bethel SonRise</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="notes-prompt">Sermon notes generation prompt</label>
+                <textarea id="notes-prompt" name="notesPrompt" rows="6" placeholder="Enter your prompt here..."
+                    required></textarea>
+            </div>
+            <button type="submit" class="btn-submit">Generate notes</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Calculate the most recent Sunday (today if it's Sunday)
+        var today = new Date();
+        var day = today.getDay(); // 0 = Sunday
+        var lastSunday = new Date(today);
+        lastSunday.setDate(today.getDate() - day);
+
+        // Format date as YYYY-MM-DD for the date input
+        var dd = String(lastSunday.getDate()).padStart(2, '0');
+        var mm = String(lastSunday.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+        var yyyy = lastSunday.getFullYear();
+        var formattedDate = yyyy + '-' + mm + '-' + dd;
+
+        document.getElementById('sermon-date').value = formattedDate;
+    });
+</script>
