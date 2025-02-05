@@ -14,7 +14,22 @@
 </head>
 
 <body>
-    <%- body %>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="nav-logo">
+                <img src="/images/bethel_logo.jpeg" alt="Bethel Logo" class="nav-logo-img">
+            </a>
+            <div class="nav-links">
+                <% if (typeof currentPath !=='undefined' && currentPath !=='/login' ) { %>
+                    <a href="/generate-new-notes" class="nav-button">Generate New Notes</a>
+                    <a href="/logout" class="nav-button nav-button-secondary">Log Out</a>
+                    <% } %>
+            </div>
+        </div>
+    </nav>
+    <div class="main-content">
+        <%- body %>
+    </div>
 </body>
 
 </html>

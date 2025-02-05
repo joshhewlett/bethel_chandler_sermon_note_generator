@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to Process",
+            "type": "node",
+            "request": "attach",
+            "processId": "${command:PickProcess}",
+            "restart": true,
+            "protocol": "inspector",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "name": "Launch Program",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/app.js",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        }
+    ]
+} 

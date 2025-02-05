@@ -11,7 +11,7 @@ const openai = new OpenAIApi();
 async function generateResponse(prompt) {
     try {
         const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini", // Confirm that this is the correct model name
+            model: "gpt-4o", // Confirm that this is the correct model name
             messages: [{
                 "role": "user",
                 content: prompt
@@ -21,7 +21,7 @@ async function generateResponse(prompt) {
             store: true
         });
         console.log(response);
-        return response.choices[0].message;
+        return response.choices[0].message.content;
     } catch (error) {
         console.error("Error generating response:", error);
         throw error;

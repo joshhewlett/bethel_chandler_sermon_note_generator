@@ -51,6 +51,12 @@ app.use(session({
 // Serve static files from /public
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Add current path to all responses
+app.use((req, res, next) => {
+    res.locals.currentPath = req.path;
+    next();
+});
+
 // Load routes
 app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);

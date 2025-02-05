@@ -3,7 +3,9 @@ import config from '../config/config.js'
 
 export default {
     showLogin: function (req, res) {
-        res.render('login');
+        res.render('login', {
+            currentPath: '/login'
+        });
     },
 
     login: function (req, res) {
@@ -20,7 +22,8 @@ export default {
             res.redirect('/generate-new-notes');
         } else {
             res.render('login', {
-                error: 'Invalid credentials'
+                error: 'Invalid credentials',
+                currentPath: '/login'
             });
         }
     },
