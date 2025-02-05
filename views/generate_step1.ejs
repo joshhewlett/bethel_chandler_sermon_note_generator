@@ -26,16 +26,28 @@
             <div class="form-group">
                 <label for="notes-prompt">Sermon notes generation prompt</label>
                 <textarea id="notes-prompt" name="notesPrompt" rows="6" placeholder="Enter your prompt here..."
-                    required></textarea>
+                    required><%- typeof defaultPrompt !== 'undefined' ? defaultPrompt : '' %></textarea>
             </div>
             <button type="submit" class="btn-submit">Generate notes</button>
         </form>
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loading-overlay">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-message">Generating sermon notes...</div>
+        <div class="loading-timer">
+            This commonly takes around 30 seconds.<br>
+            Time elapsed so far: <span id="timer">0</span> seconds
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Calculate the most recent Sunday (today if it's Sunday)
+        // Date calculation for most recent Sunday
         var today = new Date();
         var day = today.getDay(); // 0 = Sunday
         var lastSunday = new Date(today);
@@ -48,5 +60,25 @@
         var formattedDate = yyyy + '-' + mm + '-' + dd;
 
         document.getElementById('sermon-date').value = formattedDate;
+
+        // Form submission and loading overlay handling
+        const form = document.getElementById('notes-form');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const timerElement = document.getElementById('timer');
+        let timerInterval;
+        let seconds = 0;
+
+        form.addEventListener('submit', function (e) {
+            // Show loading overlay
+            loadingOverlay.classList.add('active');
+
+            // Start timer
+            seconds = 0;
+            timerElement.textContent = seconds;
+            timerInterval = setInterval(function () {
+                seconds++;
+                timerElement.textContent = seconds;
+            }, 1000);
+        });
     });
 </script>

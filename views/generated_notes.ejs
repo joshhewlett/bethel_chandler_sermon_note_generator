@@ -1,5 +1,9 @@
 <div class="container">
-    <h1 class="title">Generated Sermon Notes</h1>
+    <h1 class="title">Generated sermon notes for<br>
+        <a href="<%= metadata.video.url %>" target="_blank" class="video-link">
+            <%= metadata.video.title %>
+        </a>
+    </h1>
     <div id="editor"></div>
 </div>
 
@@ -23,6 +27,10 @@
                 ['code', 'codeblock']
             ]
         });
+
+        // Make editor read-only after initialization
+        editor.setMarkdown(editor.getMarkdown());
+        editor.isEditable = false;
     });
 </script>
 
@@ -37,6 +45,18 @@
         text-align: center;
         margin-bottom: 30px;
         color: #333;
+    }
+
+    .video-link {
+        color: #007bff;
+        text-decoration: none;
+        font-size: 0.9em;
+        transition: color 0.2s ease;
+    }
+
+    .video-link:hover {
+        color: #0056b3;
+        text-decoration: underline;
     }
 
     #editor {

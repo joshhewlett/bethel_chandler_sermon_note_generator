@@ -2,6 +2,8 @@ import {
     getSubtitles
 } from 'youtube-captions-scraper';
 import gptService from '../services/gptService.js';
+import fetch from 'node-fetch';
+import config from '../config/config.js';
 
 const prompt = `
 Transform the given sermon transcript into a structured document with the following sections. 
@@ -13,7 +15,7 @@ Respond with nothing else but the result.
 **Title:** {extracted title}<br>
 **Speaker:** {speaker name placeholder}<br>
 **Date:** {date placeholder}<br>
-**Scriptures:** {extracted scripture references}<br>
+**Scriptures:** {extracted scripture references}<br><br>
 
     2. IMPORTANT: Each line MUST end with <br>
     3. Each item MUST be on its own line
@@ -22,11 +24,11 @@ Respond with nothing else but the result.
 **Title:** The Power of Prayer<br>
 **Speaker:** John Smith<br>
 **Date:** 2024-03-20<br>
-**Scriptures:** John 3:16, Romans 8:28<br>
+**Scriptures:** John 3:16, Romans 8:28<br><br>
     6. Add a divider between this and the next section
     7. This section should not have a header or title. Let the above text be the first text in your response.
 1. Summary of the sermon
-	1. A H2 header with bold text titled "Summary"
+	1. An H2 header with bold text titled "Summary"
 	2. Generate a concise summary (4-6 sentences) capturing the main theme and key takeaways.
 	4. Add a divider between this and the next section
 2. Sermon Notes 
@@ -39,10 +41,9 @@ Respond with nothing else but the result.
 	7. Add a divider between this and the next section
 3. Application Questions
 	1. A H2 header with bold text titled "Application Questions"
-	2. Generate 3-5 reflective, open-ended questions that help the reader apply the sermon's teachings to their life.
+	2. Generate 3-4 reflective, open-ended questions that help the reader apply the sermon's teachings to their life.
 	3. Base the questions on the sermon's themes and scriptural references.
 ---
-
 `;
 
 function extractVideoId(url) {
@@ -97,9 +98,29 @@ function validateParams(params) {
             speakerName,
             sermonDate,
             bethelLocation,
-            notesPrompt
+            userPrompt: notesPrompt
         }
     };
+}
+
+async function getVideoDetails(videoId) {
+    const apiKey = config.youtubeApiKey; // Make sure to add this to your config
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.items && data.items.length > 0) {
+            return {
+                title: data.items[0].snippet.title,
+                url: `https://www.youtube.com/watch?v=${videoId}`
+            };
+        }
+        throw new Error('Video not found');
+    } catch (error) {
+        throw new Error('Failed to fetch video details: ' + error.message);
+    }
 }
 
 export async function generateNewNotes(req, res, next) {
@@ -114,7 +135,8 @@ export async function generateNewNotes(req, res, next) {
             youtubeLink,
             speakerName,
             sermonDate,
-            bethelLocation
+            bethelLocation,
+            userPrompt
         } = validation.params;
 
         // Extract and validate video ID
@@ -122,6 +144,9 @@ export async function generateNewNotes(req, res, next) {
         if (!videoId) {
             throw new Error('Invalid YouTube link provided.');
         }
+
+        // Fetch video details
+        const videoDetails = await getVideoDetails(videoId);
 
         // Fetch subtitles for the given video ID in English
         const captions = await getSubtitles({
@@ -132,30 +157,37 @@ export async function generateNewNotes(req, res, next) {
         // Combine caption texts into one transcript string
         const transcript = captions.map(caption => caption.text).join(' ');
 
-        const customizedPrompt = prompt +
+        const fullPrompt = userPrompt +
             "The speaker placeholder's value should be " + speakerName +
             ", and the sermon date place holder value should be " + sermonDate +
             "\n---\nTranscript:\n" + transcript;
-        const generatedNotes = await gptService.generateResponse(customizedPrompt);
+        const generatedNotes = await gptService.generateResponse(fullPrompt);
 
-        console.log("customizedPrompt", customizedPrompt);
-
+        console.log("customizedPrompt", fullPrompt);
         console.log("generatedNotes", generatedNotes);
 
         // Render the generated_notes view with the generated content
         res.render('generated_notes', {
             generatedNotes: generatedNotes.replace(/`/g, '\\`'), // Escape backticks to prevent JS template literal issues
-            // generatedNotes: tempResponse.replace(/`/g, '\\`'), // Escape backticks to prevent JS template literal issues
             metadata: {
                 speaker: speakerName,
                 date: sermonDate,
-                location: bethelLocation
+                location: bethelLocation,
+                video: videoDetails
             }
         });
 
     } catch (error) {
         next(new Error('Error generating notes: ' + error.message));
     }
+}
+
+// Render the notes generation form page
+export function home(req, res) {
+    res.render('generate_step1', {
+        user: req.session.user,
+        defaultPrompt: prompt
+    });
 }
 
 const tempResponse = `

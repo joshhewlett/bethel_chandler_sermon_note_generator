@@ -1,4 +1,7 @@
 // app.js
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import session from 'express-session';
 import path from 'path';
@@ -17,6 +20,7 @@ import authRoutes from './routes/authRoutes.js';
 import apiRoutes from './routes/apiRoutes.js';
 import pageRoutes from './routes/pageRoutes.js';
 import notesRoutes from './routes/notesRoutes.js';
+
 
 // Set up __dirname in ESM
 const __filename = fileURLToPath(
