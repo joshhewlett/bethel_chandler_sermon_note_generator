@@ -14,6 +14,7 @@ export default {
             password
         } = req.body;
         const user = config.users.find(u => u.username === username && u.password === password);
+        req.session.destroy();
 
         if (user) {
             req.session.user = {
