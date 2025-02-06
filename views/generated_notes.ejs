@@ -5,6 +5,17 @@
         </a>
     </h1>
     <div id="editor"></div>
+
+    <div class="actions-container">
+        <div class="actions-wrapper">
+            <select id="location-select" class="location-select">
+                <option value="" disabled selected>Select location</option>
+                <option value="Bethel Chandler">Bethel Chandler</option>
+                <option value="Bethel SonRise">Bethel SonRise</option>
+            </select>
+            <button id="print-button" class="btn-primary">Print</button>
+        </div>
+    </div>
 </div>
 
 
@@ -13,9 +24,13 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Calculate editor height based on viewport
+        const viewportHeight = window.innerHeight;
+        const editorHeight = Math.max(600, viewportHeight * 0.7); // At least 600px or 70% of viewport
+
         const editor = new toastui.Editor({
             el: document.querySelector('#editor'),
-            height: '600px',
+            height: `${editorHeight}px`,
             initialEditType: 'wysiwyg',
             previewStyle: 'vertical',
             initialValue: `<%- generatedNotes %>`,
@@ -31,6 +46,58 @@
         // Make editor read-only after initialization
         editor.setMarkdown(editor.getMarkdown());
         editor.isEditable = false;
+
+        // Handle print button click
+        document.getElementById('print-button').addEventListener('click', async function() {
+            const locationSelect = document.getElementById('location-select');
+            const location = locationSelect.value;
+
+            if (!location) {
+                alert('Please select a location before printing');
+                return;
+            }
+
+            try {
+                const response = await fetch('/print-notes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        location: location,
+                        notes: editor.getMarkdown()
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to process print request');
+                }
+
+                // Get the HTML text directly
+                const html = await response.text();
+
+                // Create a new window with the HTML content
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(html);
+                printWindow.document.close();
+
+                // Trigger print dialog after content loads
+                printWindow.onload = function() {
+                    printWindow.print();
+                };
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to process print request. Please try again.');
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const newViewportHeight = window.innerHeight;
+            const newEditorHeight = Math.max(600, newViewportHeight * 0.7);
+            editor.setHeight(`${newEditorHeight}px`);
+        });
     });
 </script>
 
@@ -39,11 +106,15 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 
     .title {
+        margin-bottom: 0px;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 0px;
         color: #333;
     }
 
@@ -60,8 +131,89 @@
     }
 
     #editor {
-        margin-top: 20px;
+        margin: 0px 0;
         border: 1px solid #ddd;
         border-radius: 4px;
+        flex-grow: 1;
+    }
+
+    .actions-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        padding: 1rem 0;
+    }
+
+    .actions-wrapper {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .location-select {
+        padding: 0.5rem 2rem 0.5rem 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        width: 200px;
+        background-color: white;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem top 50%;
+        background-size: 0.65rem auto;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    .location-select:focus {
+        border-color: #007bff;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+    }
+
+    .btn-primary {
+        display: inline-block;
+        padding: 0.5rem 2rem;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        transform: translateY(-1px);
+    }
+
+    /* Print styles */
+    @media print {
+        .navbar, .actions-container {
+            display: none !important;
+        }
+
+        .container {
+            padding: 0;
+            margin: 0;
+        }
+
+        #editor {
+            border: none;
+        }
+
+        .toastui-editor-toolbar {
+            display: none !important;
+        }
+    }
+
+    /* Responsive height adjustments */
+    @media screen and (min-height: 900px) {
+        .container {
+            padding-bottom: 40px;
+        }
     }
 </style>

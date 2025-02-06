@@ -4,13 +4,14 @@ import {
 import gptService from '../services/gptService.js';
 import fetch from 'node-fetch';
 import config from '../config/config.js';
+import { marked } from 'marked';
 
 const prompt = `
-Transform the given sermon transcript into a structured document with the following sections. 
-The output should be in Markdown, but do not include the backticks. 
-Respond with nothing else but the result. 
+Transform the given sermon transcript into a structured document with the following sections.
+The output should be in Markdown, but do not include the backticks.
+Respond with nothing else but the result.
 
-1. Sermon information 
+1. Sermon information
     1. The start of the page MUST follow this EXACT format:
 **Title:** {extracted title}<br>
 **Speaker:** {speaker name placeholder}<br>
@@ -31,13 +32,13 @@ Respond with nothing else but the result.
 	1. An H2 header with bold text titled "Summary"
 	2. Generate a concise summary (4-6 sentences) capturing the main theme and key takeaways.
 	4. Add a divider between this and the next section
-2. Sermon Notes 
-	1. Denoted by an H2 header with bold text titled "Sermon notes" 
-	2. Structure the sermon into logical sections based on its content. 
-	3. Use informative bullet points. Ensure that clarity is not sacrificed for concise writing. The reader should understand the journey the speaker is making by reading these bullet points 
-	4. Any time a sub bullet point is used, ensure it's indented by 4 spaces 
-	5. Maintain clarity and readability while preserving key sermon details. 
-	6. Each logical section should have an H3 header and use roman numeral-style prefixes 
+2. Sermon Notes
+	1. Denoted by an H2 header with bold text titled "Sermon notes"
+	2. Structure the sermon into logical sections based on its content.
+	3. Use informative bullet points. Ensure that clarity is not sacrificed for concise writing. The reader should understand the journey the speaker is making by reading these bullet points
+	4. Any time a sub bullet point is used, ensure it's indented by 4 spaces
+	5. Maintain clarity and readability while preserving key sermon details.
+	6. Each logical section should have an H3 header and use roman numeral-style prefixes
 	7. Add a divider between this and the next section
 3. Application Questions
 	1. A H2 header with bold text titled "Application Questions"
@@ -161,7 +162,8 @@ export async function generateNewNotes(req, res, next) {
             "The speaker placeholder's value should be " + speakerName +
             ", and the sermon date place holder value should be " + sermonDate +
             "\n---\nTranscript:\n" + transcript;
-        const generatedNotes = await gptService.generateResponse(fullPrompt);
+        // const generatedNotes = await gptService.generateResponse(fullPrompt);
+        const generatedNotes = tempResponse;
 
         console.log("customizedPrompt", fullPrompt);
         console.log("generatedNotes", generatedNotes);
@@ -183,7 +185,7 @@ export async function generateNewNotes(req, res, next) {
 }
 
 // Render the notes generation form page
-export function home(req, res) {
+export function getGenerationIntakeForm(req, res) {
     res.render('generate_step1', {
         user: req.session.user,
         defaultPrompt: prompt
@@ -192,9 +194,9 @@ export function home(req, res) {
 
 const tempResponse = `
 **Title:** Built to Last<br>
-**Speaker:** Pastor Mike Gowens<br>  
+**Speaker:** Pastor Mike Gowens<br>
 **Date:** 2025-02-02<br>
-**Scriptures:** James 1:2-3, Micah 7:8, Proverbs 24:16, Matthew 16:13-20, Ephesians 1  
+**Scriptures:** James 1:2-3, Micah 7:8, Proverbs 24:16, Matthew 16:13-20, Ephesians 1
 
 ---
 
@@ -246,3 +248,41 @@ Pastor Mike Gowens reflects on the trials and triumphs of 2024, emphasizing the 
 4. How does being part of a church community help you grow and maintain your faith? What role can you play in supporting others within your church?
 5. Consider areas of your life that may not be fully surrendered to Jesus. What steps can you take to bring these aspects under His lordship?
 `
+
+function validateLocation(location) {
+    const validLocations = ['bethel chandler', 'bethel sonrise'];
+    return validLocations.includes(location.toLowerCase());
+}
+
+export async function printNotes(req, res, next) {
+    try {
+        const { location, notes } = req.body;
+
+        // Validate required fields
+        if (!location || !notes) {
+            throw new Error('Both location and notes are required');
+        }
+
+        // Validate location
+        if (!validateLocation(location)) {
+            throw new Error('Invalid location. Must be either "Bethel Chandler" or "Bethel SonRise"');
+        }
+
+        // Convert markdown to HTML
+        const htmlContent = marked(notes, {
+            gfm: true, // GitHub Flavored Markdown
+            breaks: true, // Convert line breaks to <br>
+            sanitize: true // Sanitize HTML tags in the markdown
+        });
+
+        // Render with print layout
+        res.render('print-view', {
+            layout: 'print-layout',
+            content: htmlContent,
+            location: location
+        });
+
+    } catch (error) {
+        next(new Error('Error processing print request: ' + error.message));
+    }
+}

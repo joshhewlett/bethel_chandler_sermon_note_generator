@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex">
+    <title></title>
+    <style>
+        @media print {
+            @page {
+                size: letter portrait;
+                margin: 0.5in;
+            }
+            @page :first {
+                margin: 0.5in;
+            }
+            @top-left { content: none !important; }
+            @top-center { content: none !important; }
+            @top-right { content: none !important; }
+            @bottom-left { content: none !important; }
+            @bottom-center { content: none !important; }
+            @bottom-right { content: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <%- body %>
+    <script>
+        // This helps ensure print dialog opens with the correct settings
+        window.onload = function() {
+            document.title = "Sermon Notes";  // Clean title for print dialog
+        }
+    </script>
+</body>
+</html>
