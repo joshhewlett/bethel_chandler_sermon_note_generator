@@ -162,8 +162,8 @@ export async function generateNewNotes(req, res, next) {
             "The speaker placeholder's value should be " + speakerName +
             ", and the sermon date place holder value should be " + sermonDate +
             "\n---\nTranscript:\n" + transcript;
-        // const generatedNotes = await gptService.generateResponse(fullPrompt);
-        const generatedNotes = tempResponse;
+        const generatedNotes = await gptService.generateResponse(fullPrompt);
+        // const generatedNotes = tempResponse;
 
         console.log("customizedPrompt", fullPrompt);
         console.log("generatedNotes", generatedNotes);
